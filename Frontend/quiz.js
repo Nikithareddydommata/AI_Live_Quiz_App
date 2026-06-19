@@ -3,10 +3,18 @@ let questions = [];
 let startTime;
 let timerInterval;
 
+const API_URL = "https://ai-live-quiz-app.onrender.com";
+
 const username = localStorage.getItem("username");
+
+if (!username) {
+    alert("Please login first");
+    window.location = "login.html";
+}
 
 document.getElementById("welcomeUser").innerHTML =
     "Welcome " + username;
+
 
 function generateQuiz() {
     const quizCode = document.getElementById("quizCode").value;
@@ -17,7 +25,7 @@ function generateQuiz() {
         return;
     }
 
-    fetch("http://127.0.0.1:5000/generate_quiz", {
+    fetch(`${API_URL}/generate_quiz`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -35,8 +43,13 @@ function generateQuiz() {
         }
 
         alert("Quiz Generated Successfully. Now click Join Quiz.");
+    })
+    .catch(error => {
+        alert("Backend connection failed. Please check Render deployment.");
+        console.log(error);
     });
 }
+
 
 function joinQuiz() {
     const quizCode = document.getElementById("joinCode").value;
@@ -46,7 +59,7 @@ function joinQuiz() {
         return;
     }
 
-    fetch("http://127.0.0.1:5000/join_quiz/" + quizCode)
+    fetch(`${API_URL}/join_quiz/${quizCode}`)
     .then(res => res.json())
     .then(data => {
         if (data.error) {
@@ -60,8 +73,13 @@ function joinQuiz() {
 
         displayQuestions();
         startTimer();
+    })
+    .catch(error => {
+        alert("Unable to join quiz. Backend not responding.");
+        console.log(error);
     });
 }
+
 
 function displayQuestions() {
     let html = `
@@ -78,10 +96,10 @@ function displayQuestions() {
 
         q.options.forEach(option => {
             html += `
-                <label class="option">
+                <div class="option">
                     <input type="radio" name="q${index}" value="${option}">
-                    ${option}
-                </label>
+                    <label>${option}</label>
+                </div>
             `;
         });
 
@@ -96,6 +114,7 @@ function displayQuestions() {
     document.getElementById("quizSection").innerHTML = html;
 }
 
+
 function startTimer() {
     clearInterval(timerInterval);
 
@@ -107,6 +126,7 @@ function startTimer() {
             "Time: " + seconds + " seconds";
     }, 1000);
 }
+
 
 function submitQuiz() {
     let answers = {};
@@ -126,7 +146,7 @@ function submitQuiz() {
 
     clearInterval(timerInterval);
 
-    fetch("http://127.0.0.1:5000/submit_quiz", {
+    fetch(`${API_URL}/submit_quiz`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -140,14 +160,25 @@ function submitQuiz() {
     })
     .then(res => res.json())
     .then(data => {
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
         showResult(data);
+    })
+    .catch(error => {
+        alert("Quiz submission failed.");
+        console.log(error);
     });
 }
 
+
 function showResult(data) {
     let html = `
-        <div class="card">
+        <div class="result-card">
             <h2>Quiz Result</h2>
+
             <p><b>Score:</b> ${data.score}/${data.total}</p>
             <p><b>Accuracy:</b> ${data.accuracy}%</p>
             <p><b>ML Prediction:</b> ${data.performance_prediction}</p>
@@ -160,7 +191,7 @@ function showResult(data) {
 
     data.explanations.forEach(item => {
         html += `
-            <div class="question-box">
+            <div class="review-item">
                 <p><b>Question:</b> ${item.question}</p>
                 <p><b>Your Answer:</b> ${item.your_answer}</p>
                 <p><b>Correct Answer:</b> ${item.correct_answer}</p>
@@ -169,16 +200,23 @@ function showResult(data) {
         `;
     });
 
-    html += `<h3>Leaderboard</h3><ol>`;
+    html += `
+            <div class="leaderboard">
+                <h3>Leaderboard</h3>
+                <ol>
+    `;
 
     data.leaderboard.forEach(player => {
         html += `
-            <li>${player.name} - Score: ${player.score}, Accuracy: ${player.accuracy}%</li>
+            <li>
+                ${player.name} - Score: ${player.score}, Accuracy: ${player.accuracy}%
+            </li>
         `;
     });
 
     html += `
-            </ol>
+                </ol>
+            </div>
         </div>
     `;
 
