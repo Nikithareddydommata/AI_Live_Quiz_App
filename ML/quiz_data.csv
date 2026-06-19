@@ -1,0 +1,11 @@
+score,accuracy,response_time,attempted,performance
+9,90,25,10,High Performer
+8,80,30,10,High Performer
+7,70,45,10,Average Performer
+6,60,50,10,Average Performer
+5,50,65,10,Average Performer
+4,40,80,10,Low Performer
+3,30,90,10,Low Performer
+2,20,100,10,Low Performer
+10,100,20,10,High Performer
+6,60,55,10,Average Performer

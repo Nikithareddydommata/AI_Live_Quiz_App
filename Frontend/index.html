@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Live Quiz App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-container">
+
+    <h1>AI-Powered Live Online Quiz Application</h1>
+
+    <div class="card" id="authSection">
+        <h2>Sign Up</h2>
+
+        <input type="text" id="signupName" placeholder="Enter Name">
+        <input type="email" id="signupEmail" placeholder="Enter Email">
+        <input type="password" id="signupPassword" placeholder="Enter Password">
+
+        <button onclick="signup()">Sign Up</button>
+
+        <hr>
+
+        <h2>Login</h2>
+
+        <input type="email" id="loginEmail" placeholder="Enter Email">
+        <input type="password" id="loginPassword" placeholder="Enter Password">
+
+        <button onclick="login()">Login</button>
+    </div>
+
+    <h2 id="welcomeUser"></h2>
+
+    <div class="card">
+        <h2>Generate AI Quiz</h2>
+
+        <input type="text" id="quizCode" placeholder="Enter Quiz Code">
+
+        <select id="quizCategory">
+            <option value="">Select Quiz Type</option>
+            <option value="Python">Python</option>
+            <option value="AI">AI & Machine Learning</option>
+            <option value="Data Science">Data Science</option>
+            <option value="Web Development">Web Development</option>
+        </select>
+
+        <button onclick="generateQuiz()">Generate Quiz</button>
+    </div>
+
+    <div class="card">
+        <h2>Join Quiz</h2>
+
+        <input type="text" id="joinCode" placeholder="Enter Quiz Code">
+
+        <button onclick="joinQuiz()">Join Quiz</button>
+    </div>
+
+    <div id="quizSection" class="card hidden">
+        <h2 id="quizTitle">Questions</h2>
+
+        <div id="timer">Time: 0 seconds</div>
+
+        <div id="questions"></div>
+
+        <button onclick="submitQuiz()">Submit Quiz</button>
+    </div>
+
+    <div id="resultSection" class="card hidden">
+        <h2>Quiz Result</h2>
+
+        <p id="score"></p>
+        <p id="accuracy"></p>
+        <p id="prediction"></p>
+
+        <h3>AI Feedback</h3>
+        <pre id="feedback"></pre>
+
+        <h3>Answer Review</h3>
+        <div id="review"></div>
+
+        <h3>Leaderboard</h3>
+        <div id="leaderboard"></div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

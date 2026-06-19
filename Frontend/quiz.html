@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Quiz Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+
+    <h1>AI Quiz Dashboard</h1>
+
+    <h2 id="welcomeUser"></h2>
+
+    <input type="text" id="quizCode" placeholder="Enter Quiz Code">
+
+    <select id="quizCategory">
+        <option value="">Select Category</option>
+        <option value="Python">Python</option>
+        <option value="AI">AI & Machine Learning</option>
+        <option value="Data Science">Data Science</option>
+        <option value="Web Development">Web Development</option>
+    </select>
+
+    <button onclick="generateQuiz()">Generate Quiz</button>
+
+    <hr>
+
+    <input type="text" id="joinCode" placeholder="Enter Same Quiz Code">
+
+    <button onclick="joinQuiz()">Join Quiz</button>
+
+</div>
+
+<div id="quizSection"></div>
+
+<div id="resultSection"></div>
+
+<script src="quiz.js"></script>
+
+</body>
+</html>
