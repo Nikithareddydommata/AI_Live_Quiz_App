@@ -3,17 +3,6 @@ let questions = [];
 let startTime;
 let timerInterval;
 
-const username = localStorage.getItem("username");
-
-if (!username) {
-    alert("Please login first");
-    window.location = "index.html";
-}
-
-document.getElementById("welcomeUser").innerHTML =
-    "Welcome " + username;
-
-
 function generateQuiz() {
     const quizCode = document.getElementById("quizCode").value;
     const category = document.getElementById("quizCategory").value;
@@ -25,9 +14,7 @@ function generateQuiz() {
 
     fetch("/generate_quiz", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             quiz_code: quizCode,
             category: category
@@ -39,11 +26,13 @@ function generateQuiz() {
             alert(data.error);
             return;
         }
-
         alert("Quiz Generated Successfully. Now click Join Quiz.");
+    })
+    .catch(err => {
+        alert("Generate failed. Check server.");
+        console.log(err);
     });
 }
-
 
 function joinQuiz() {
     const quizCode = document.getElementById("joinCode").value;
@@ -67,9 +56,12 @@ function joinQuiz() {
 
         displayQuestions();
         startTimer();
+    })
+    .catch(err => {
+        alert("Join failed. Check server.");
+        console.log(err);
     });
 }
-
 
 function displayQuestions() {
     let html = `
@@ -104,7 +96,6 @@ function displayQuestions() {
     document.getElementById("quizSection").innerHTML = html;
 }
 
-
 function startTimer() {
     clearInterval(timerInterval);
 
@@ -117,15 +108,11 @@ function startTimer() {
     }, 1000);
 }
 
-
 function submitQuiz() {
     let answers = {};
 
     questions.forEach((q, index) => {
-        const selected = document.querySelector(
-            `input[name="q${index}"]:checked`
-        );
-
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
         if (selected) {
             answers[index] = selected.value;
         }
@@ -138,11 +125,9 @@ function submitQuiz() {
 
     fetch("/submit_quiz", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            name: username,
+            name: localStorage.getItem("username") || "Guest",
             quiz_code: currentQuizCode,
             answers: answers,
             response_time: responseTime
@@ -154,17 +139,18 @@ function submitQuiz() {
             alert(data.error);
             return;
         }
-
         showResult(data);
+    })
+    .catch(err => {
+        alert("Submit failed. Check server.");
+        console.log(err);
     });
 }
-
 
 function showResult(data) {
     let html = `
         <div class="result-card">
             <h2>Quiz Result</h2>
-
             <p><b>Score:</b> ${data.score}/${data.total}</p>
             <p><b>Accuracy:</b> ${data.accuracy}%</p>
             <p><b>ML Prediction:</b> ${data.performance_prediction}</p>
@@ -194,9 +180,7 @@ function showResult(data) {
 
     data.leaderboard.forEach(player => {
         html += `
-            <li>
-                ${player.name} - Score: ${player.score}, Accuracy: ${player.accuracy}%
-            </li>
+            <li>${player.name} - Score: ${player.score}, Accuracy: ${player.accuracy}%</li>
         `;
     });
 
