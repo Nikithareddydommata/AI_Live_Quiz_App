@@ -3,13 +3,11 @@ let questions = [];
 let startTime;
 let timerInterval;
 
-const API_URL = "https://ai-live-quiz-app.onrender.com";
-
 const username = localStorage.getItem("username");
 
 if (!username) {
     alert("Please login first");
-    window.location = "login.html";
+    window.location = "index.html";
 }
 
 document.getElementById("welcomeUser").innerHTML =
@@ -25,7 +23,7 @@ function generateQuiz() {
         return;
     }
 
-    fetch(`${API_URL}/generate_quiz`, {
+    fetch("/generate_quiz", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -43,10 +41,6 @@ function generateQuiz() {
         }
 
         alert("Quiz Generated Successfully. Now click Join Quiz.");
-    })
-    .catch(error => {
-        alert("Backend connection failed. Please check Render deployment.");
-        console.log(error);
     });
 }
 
@@ -59,7 +53,7 @@ function joinQuiz() {
         return;
     }
 
-    fetch(`${API_URL}/join_quiz/${quizCode}`)
+    fetch("/join_quiz/" + quizCode)
     .then(res => res.json())
     .then(data => {
         if (data.error) {
@@ -73,10 +67,6 @@ function joinQuiz() {
 
         displayQuestions();
         startTimer();
-    })
-    .catch(error => {
-        alert("Unable to join quiz. Backend not responding.");
-        console.log(error);
     });
 }
 
@@ -146,7 +136,7 @@ function submitQuiz() {
 
     clearInterval(timerInterval);
 
-    fetch(`${API_URL}/submit_quiz`, {
+    fetch("/submit_quiz", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -166,10 +156,6 @@ function submitQuiz() {
         }
 
         showResult(data);
-    })
-    .catch(error => {
-        alert("Quiz submission failed.");
-        console.log(error);
     });
 }
 
