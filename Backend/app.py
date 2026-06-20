@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import joblib
 import random
@@ -7,22 +7,10 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Correct model path for local + Render deployment
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-MODEL_PATH = os.path.join(
-    BASE_DIR,
-    "..",
-    "ML",
-    "performance_model.pkl"
-)
-
-ENCODER_PATH = os.path.join(
-    BASE_DIR,
-    "..",
-    "ML",
-    "label_encoder.pkl"
-)
+FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "Frontend"))
+MODEL_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "ML", "performance_model.pkl"))
+ENCODER_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "ML", "label_encoder.pkl"))
 
 model = joblib.load(MODEL_PATH)
 encoder = joblib.load(ENCODER_PATH)
@@ -33,10 +21,28 @@ leaderboard = []
 
 
 @app.route("/")
-def home():
-    return jsonify({
-        "message": "AI Quiz Backend Running Successfully"
-    })
+def index():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.route("/signup.html")
+def signup_page():
+    return send_from_directory(FRONTEND_DIR, "signup.html")
+
+
+@app.route("/quiz.html")
+def quiz_page():
+    return send_from_directory(FRONTEND_DIR, "quiz.html")
+
+
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory(FRONTEND_DIR, path)
+
+
+@app.route("/api/status")
+def status():
+    return jsonify({"message": "AI Quiz App Running Successfully"})
 
 
 @app.route("/signup", methods=["POST"])
@@ -48,9 +54,7 @@ def signup():
     password = data["password"]
 
     if email in users:
-        return jsonify({
-            "error": "User already exists"
-        })
+        return jsonify({"error": "User already exists"})
 
     users[email] = {
         "name": name,
@@ -58,11 +62,7 @@ def signup():
         "password": password
     }
 
-    return jsonify({
-        "message": "Signup successful",
-        "name": name,
-        "email": email
-    })
+    return jsonify({"message": "Signup successful", "name": name, "email": email})
 
 
 @app.route("/login", methods=["POST"])
@@ -73,14 +73,10 @@ def login():
     password = data["password"]
 
     if email not in users:
-        return jsonify({
-            "error": "User not found"
-        })
+        return jsonify({"error": "User not found"})
 
     if users[email]["password"] != password:
-        return jsonify({
-            "error": "Wrong password"
-        })
+        return jsonify({"error": "Wrong password"})
 
     return jsonify({
         "message": "Login successful",
@@ -114,9 +110,7 @@ def generate_quiz():
 @app.route("/join_quiz/<quiz_code>", methods=["GET"])
 def join_quiz(quiz_code):
     if quiz_code not in quizzes:
-        return jsonify({
-            "error": "Quiz not found"
-        })
+        return jsonify({"error": "Quiz not found"})
 
     return jsonify({
         "quiz_code": quiz_code,
@@ -135,9 +129,7 @@ def submit_quiz():
     response_time = data["response_time"]
 
     if quiz_code not in quizzes:
-        return jsonify({
-            "error": "Invalid quiz code"
-        })
+        return jsonify({"error": "Invalid quiz code"})
 
     questions = quizzes[quiz_code]["questions"]
 
@@ -162,24 +154,11 @@ def submit_quiz():
     accuracy = round((score / total) * 100, 2)
     attempted = len(answers)
 
-    prediction_input = [[
-        score,
-        accuracy,
-        response_time,
-        attempted
-    ]]
-
+    prediction_input = [[score, accuracy, response_time, attempted]]
     prediction_encoded = model.predict(prediction_input)
     prediction = encoder.inverse_transform(prediction_encoded)[0]
 
-    feedback = generate_ai_feedback(
-        name,
-        score,
-        total,
-        accuracy,
-        response_time,
-        prediction
-    )
+    feedback = generate_ai_feedback(name, score, total, accuracy, response_time, prediction)
 
     leaderboard.append({
         "name": name,
@@ -188,11 +167,7 @@ def submit_quiz():
         "performance": prediction
     })
 
-    sorted_leaderboard = sorted(
-        leaderboard,
-        key=lambda x: x["score"],
-        reverse=True
-    )
+    sorted_leaderboard = sorted(leaderboard, key=lambda x: x["score"], reverse=True)
 
     return jsonify({
         "score": score,
@@ -218,7 +193,7 @@ def generate_ai_questions(category):
                 "question": "Which data type is used to store multiple values in Python?",
                 "options": ["int", "float", "list", "char"],
                 "answer": "list",
-                "explanation": "A list stores multiple values in a single variable."
+                "explanation": "A list stores multiple values in one variable."
             },
             {
                 "question": "Which symbol is used for comments in Python?",
@@ -236,19 +211,13 @@ def generate_ai_questions(category):
                 "question": "Python is which type of language?",
                 "options": ["Compiled", "Interpreted", "Assembly", "Machine"],
                 "answer": "Interpreted",
-                "explanation": "Python is an interpreted high-level programming language."
+                "explanation": "Python is an interpreted high-level language."
             }
         ],
-
         "AI": [
             {
                 "question": "What does AI stand for?",
-                "options": [
-                    "Artificial Intelligence",
-                    "Automatic Internet",
-                    "Advanced Input",
-                    "Applied Information"
-                ],
+                "options": ["Artificial Intelligence", "Automatic Internet", "Advanced Input", "Applied Information"],
                 "answer": "Artificial Intelligence",
                 "explanation": "AI means Artificial Intelligence."
             },
@@ -260,50 +229,39 @@ def generate_ai_questions(category):
             },
             {
                 "question": "Which algorithm is used in this project?",
-                "options": [
-                    "Linear Regression",
-                    "Logistic Regression",
-                    "K-Means",
-                    "Apriori"
-                ],
+                "options": ["Linear Regression", "Logistic Regression", "K-Means", "Apriori"],
                 "answer": "Logistic Regression",
-                "explanation": "Logistic Regression is used for classification prediction."
+                "explanation": "Logistic Regression is used for classification."
             },
             {
                 "question": "Which library is used for ML in Python?",
                 "options": ["React", "Scikit-learn", "HTML", "Bootstrap"],
                 "answer": "Scikit-learn",
-                "explanation": "Scikit-learn is a popular ML library in Python."
+                "explanation": "Scikit-learn is a popular Python ML library."
             },
             {
                 "question": "Generative AI is used to generate?",
                 "options": ["Feedback", "Electricity", "Hardware", "Network cables"],
                 "answer": "Feedback",
-                "explanation": "Generative AI can create text, feedback, explanations, and content."
+                "explanation": "Generative AI can create feedback and explanations."
             }
         ],
-
         "Data Science": [
             {
                 "question": "Which library is used for data analysis?",
                 "options": ["Pandas", "Flask", "HTML", "CSS"],
                 "answer": "Pandas",
-                "explanation": "Pandas is used for data analysis and manipulation."
+                "explanation": "Pandas is used for data analysis."
             },
             {
                 "question": "Which chart is used to show trends?",
                 "options": ["Line Chart", "Pie Chart", "Bar Chart", "Table"],
                 "answer": "Line Chart",
-                "explanation": "Line charts are commonly used to show trends over time."
+                "explanation": "Line charts show trends over time."
             },
             {
                 "question": "CSV stands for?",
-                "options": [
-                    "Comma Separated Values",
-                    "Computer System Value",
-                    "Common Server Variable",
-                    "Code Save Version"
-                ],
+                "options": ["Comma Separated Values", "Computer System Value", "Common Server Variable", "Code Save Version"],
                 "answer": "Comma Separated Values",
                 "explanation": "CSV means Comma Separated Values."
             },
@@ -315,76 +273,51 @@ def generate_ai_questions(category):
             },
             {
                 "question": "Accuracy is used to measure?",
-                "options": [
-                    "Model performance",
-                    "File size",
-                    "Screen size",
-                    "Internet speed"
-                ],
+                "options": ["Model performance", "File size", "Screen size", "Internet speed"],
                 "answer": "Model performance",
-                "explanation": "Accuracy measures how many predictions are correct."
+                "explanation": "Accuracy measures correct predictions."
             }
         ],
-
         "Web Development": [
             {
                 "question": "HTML is used for?",
                 "options": ["Structure", "Styling", "Database", "Machine Learning"],
                 "answer": "Structure",
-                "explanation": "HTML creates the structure of a webpage."
+                "explanation": "HTML creates webpage structure."
             },
             {
                 "question": "CSS is used for?",
                 "options": ["Styling", "Database", "Server", "AI"],
                 "answer": "Styling",
-                "explanation": "CSS is used to style webpages."
+                "explanation": "CSS styles webpages."
             },
             {
                 "question": "JavaScript is used for?",
-                "options": [
-                    "Interactivity",
-                    "Database only",
-                    "Image editing",
-                    "Operating System"
-                ],
+                "options": ["Interactivity", "Database only", "Image editing", "Operating System"],
                 "answer": "Interactivity",
-                "explanation": "JavaScript adds interactivity to webpages."
+                "explanation": "JavaScript adds webpage interactivity."
             },
             {
                 "question": "Flask is a framework of which language?",
                 "options": ["Python", "Java", "C", "PHP"],
                 "answer": "Python",
-                "explanation": "Flask is a lightweight Python web framework."
+                "explanation": "Flask is a Python web framework."
             },
             {
                 "question": "Frontend runs mainly in?",
                 "options": ["Browser", "Database", "Server room", "Compiler"],
                 "answer": "Browser",
-                "explanation": "Frontend code runs in the user's browser."
+                "explanation": "Frontend code runs in the browser."
             }
         ]
     }
 
-    questions = question_bank.get(
-        category,
-        question_bank["Python"]
-    )
-
-    return random.sample(
-        questions,
-        len(questions)
-    )
+    questions = question_bank.get(category, question_bank["Python"])
+    return random.sample(questions, len(questions))
 
 
-def generate_ai_feedback(
-    name,
-    score,
-    total,
-    accuracy,
-    response_time,
-    prediction
-):
-    feedback = f"""
+def generate_ai_feedback(name, score, total, accuracy, response_time, prediction):
+    return f"""
 Hello {name},
 
 You answered {score} out of {total} questions correctly.
@@ -395,26 +328,21 @@ AI Performance Analysis:
 Your predicted performance category is {prediction}.
 
 Feedback:
-You have completed the quiz successfully. Your result shows your current understanding of the selected topic.
+You completed the quiz successfully. Your result shows your current understanding of the selected topic.
 
 Suggestions:
-If your score is high, continue practicing advanced-level questions.
-If your score is average, revise the basic concepts and practice more.
+If your score is high, continue practicing advanced questions.
+If your score is average, revise basic concepts and practice more.
 If your score is low, focus on fundamentals and review explanations carefully.
 
 Improvement Tip:
-Try to improve both accuracy and time management in the next quiz.
+Try to improve both accuracy and time management.
 
 Overall Result:
 {prediction}
 """
-    return feedback
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-
-    app.run(
-        host="0.0.0.0",
-        port=port
-    )
+    app.run(host="0.0.0.0", port=port)
